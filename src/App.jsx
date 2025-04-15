@@ -1,9 +1,20 @@
 import React from 'react'
-import DataTable from './components/ParseContent'
+import Recount from './components/table/Recount3'
+import MM10 from './components/table/MM10'
+import HG38 from './components/table/HG38'
+import HomePage from './components/HomePage'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 const App = () => {
   return (
-    <DataTable />
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<HomePage />} />
+        <Route path="/recount3" element={<Recount />} />
+        <Route path="/mm10" element={<MM10 />} />
+        <Route path="/hg38" element={<HG38 />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

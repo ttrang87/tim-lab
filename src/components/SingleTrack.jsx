@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { PositionInput } from './PositionInput';
+import { PositionInput } from './feature/PositionInput';
 import { BarIcon, CloseIcon } from '../assets/icon';
-import HighLightSelector from './HighLightSelector';
+import HighLightSelector from './feature/HighLightSelector';
 
 export const SingleTrackView = ({ track, onClose }) => {
   const containerRef = useRef(null);
