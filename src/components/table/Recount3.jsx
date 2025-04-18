@@ -210,6 +210,7 @@ const Recount = () => {
                 containerRef={containerRef}
                 changeMode={changeMode}
                 definePosition={definePosition}
+                exportState={true}
             />
         </div>
     );

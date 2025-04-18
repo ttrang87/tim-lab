@@ -211,6 +211,7 @@ const MM10 = () => {
                 containerRef={containerRef}
                 changeMode={changeMode}
                 definePosition={definePosition}
+                exportState={true}
             />
         </div>
     );

@@ -1,20 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { PositionInput } from './PositionInput';
 import { TrashIcon, BarIcon, ExportIcon } from '../../assets/icon';
 import ProteinPaint from './ProteinPaint';
 import HighLightSelector from './HighLightSelector';
 import Scale from './Scale';
 import { CloseIcon } from '../../assets/icon';
-// import { openTrackWindow } from './TrackWindowManager';
+import { ScaleContext } from '../context';
 
-export const Visualization = ({ activeVisualizationTracks, onRemoveTrack, containerRef, changeMode, definePosition }) => {
+
+export const Visualization = ({ activeVisualizationTracks, onRemoveTrack, containerRef, changeMode, definePosition, exportState}) => {
     const [visible, setVisible] = useState(false)
-    const [hlChromosome, setHlChromosome] = useState('')
-    const [hlRanges, setHlRanges] = useState([])
-    const [height, setHeight] = useState(100)
-    const [min, setMin] = useState(0)
-    const [max, setMax] = useState(100)
-    const [scale, setScale] = useState(false)
+    
+    const {min, setMin, max, setMax, scale, setScale, height, setHeight, hlRanges, setHlRanges, hlChromosome, setHlChromosome} = useContext(ScaleContext)
+
 
     // Get position in local storage:
     const [position, setPosition] = useState({
@@ -37,111 +35,53 @@ export const Visualization = ({ activeVisualizationTracks, onRemoveTrack, contai
     }, [definePosition]);
 
     const handleExportClick = () => {
-        if (!containerRef.current || !window.runproteinpaint) return;
+        // Save current settings to localStorage or encode in URL
+        localStorage.setItem('EXPORT_TRACKS', JSON.stringify(activeVisualizationTracks));
+        localStorage.setItem('EXPORT_POSITION', JSON.stringify(position));
+        localStorage.setItem('EXPORT_HIGHLIGHT', JSON.stringify({
+            chr: hlChromosome,
+            ranges: hlRanges
+        }));
+        localStorage.setItem('EXPORT_SCALE', JSON.stringify({
+            height, min, max, scale
+        }));
 
-        const formattedPosition = `${position.chromosome}:${position.start}-${position.end}`;
-
-        const filteredTracks = activeVisualizationTracks.flatMap((track) => {
-            const trackConfig = {
-                type: "bigwig",
-                url: track.bigwig,
-                name: track.cellLine,
-            };
-            const bigbedConfig = {
-                type: "bedj",
-                url: track.bigbed,
-                name: "bigBed demo",
-            };
-
-            if (height) {
-                trackConfig.height = height;
-            }
-
-            if (scale) {
-                trackConfig.scale = {
-                    min: min,
-                    max: max,
-                };
-            }
-
-            return [trackConfig, bigbedConfig];
-        });
-
-        // Convert highlight regions to format expected by ProteinPaint
-        const highlight = hlRanges.length > 0
-            ? {
-                chr: hlChromosome,
-                regions: hlRanges.map(range => ({
-                    start: +range.start,
-                    stop: +range.end
-                }))
-            }
-            : null;
-
-        const newWindow = window.open("", "_blank");
-        if (!newWindow) return;
-
-        newWindow.document.write(`
-          <html>
-            <head>
-              <title>ProteinPaint Export</title>
-              <script src="https://proteinpaint.stjude.org/bin/proteinpaint.js"></script>
-            </head>
-            <body>
-              <div id="pp-holder" style="min-height:400px;"></div>
-              <script>
-                window.onload = function () {
-                  runproteinpaint({
-                    host: "https://proteinpaint.stjude.org/",
-                    holder: document.getElementById("pp-holder"),
-                    parseurl: true,
-                    block: true,
-                    nobox: 1,
-                    noheader: 1,
-                    genome: "hg38",
-                    position: "${formattedPosition}",
-                    ${highlight ? `highlightregions: [${JSON.stringify(highlight)}],` : ""}
-                    nativetracks: "RefGene",
-                    tracks: ${JSON.stringify(filteredTracks)}
-                  });
-                }
-              </script>
-            </body>
-          </html>
-        `);
-        newWindow.document.close();
+        // Open new route in a new tab
+        window.open('/export', '_blank');
     };
-
 
 
     return (
         <div className='flex flex-col gap-4 pt-3'>
             <div className='flex justify-between items-start px-8'>
-                <div className="grid grid-cols-6 gap-4">
-                    {activeVisualizationTracks.map((track, index) => (
-                        <div key={index} className="flex items-center justify-between gap-1 bg-gray-100 rounded-full py-1 pl-3 pr-2">
-                            <span className="cursor-pointer hover:text-blue-600"
-                                onClick={() => handleTrackClick(track)}
-                                title="Open in new window">
-                                {track.cellLine}
-                            </span>
-                            <button
-                                onClick={() => onRemoveTrack(index)}
-                                className="w-8 h-8 flex justify-center items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-2"
-                            >
-                                {TrashIcon}
-                            </button>
-                        </div>
-                    ))}
-                </div>
-                <div className="flex gap-3 relative">
-                    <button
-                        className="w-9 h-9 flex justify-center items-center rounded-full hover:bg-gray-200 transition-colors-200 duration-200"
-                        onClick={() => handleExportClick(position)}
-                        title='Open in other tab'
-                    >
-                        {ExportIcon}
-                    </button>
+                {exportState && (
+                    <div className="grid grid-cols-6 gap-4">
+                        {activeVisualizationTracks.map((track, index) => (
+                            <div key={index} className="flex items-center justify-between gap-1 bg-gray-100 rounded-full py-1 pl-3 pr-2">
+                                <span className="cursor-pointer hover:text-blue-600"
+                                    onClick={() => handleTrackClick(track)}
+                                    title="Open in new window">
+                                    {track.cellLine}
+                                </span>
+                                <button
+                                    onClick={() => onRemoveTrack(index)}
+                                    className="w-8 h-8 flex justify-center items-center hover:bg-gray-200 transition-colors duration-200 rounded-full p-2"
+                                >
+                                    {TrashIcon}
+                                </button>
+                            </div>
+                        ))}
+                    </div>)}
+                <div className="flex relative ml-auto gap-3">
+                    {exportState && (
+                        <button
+                            className="w-9 h-9 flex justify-center items-center rounded-full hover:bg-gray-200 transition-colors-200 duration-200"
+                            onClick={handleExportClick}
+                            title='Open in other tab'
+                        >
+                            {ExportIcon}
+                        </button>
+                    )}
                     <button
                         className="w-9 h-9 flex justify-center items-center rounded-full hover:bg-gray-200 transition-colors-200 duration-200"
                         onClick={() => setVisible(!visible)}
@@ -188,11 +128,11 @@ export const Visualization = ({ activeVisualizationTracks, onRemoveTrack, contai
             <ProteinPaint
                 activeTracks={activeVisualizationTracks}
                 position={`${position.chromosome}:${position.start}-${position.end}`}
+                setPosition={setPosition}
                 containerRef={containerRef}  // Example position
-                height={height}
-                min={min}
-                max={max}
-                scale={scale}
+                includeGeneTrack={exportState}
+                hlRanges={hlRanges}
+                hlChromosome={hlChromosome}
             />
         </div>
     )

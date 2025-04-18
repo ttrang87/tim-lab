@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import SearchFilter from '../feature/SearchEngine';
 import { Visualization } from '../feature/Visualization';
 import { LinkIcon } from '../../assets/icon';
-import {toast, Toaster} from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 
 const HG38 = () => {
     const [currentData, setCurrentData] = useState([]);
@@ -16,6 +16,7 @@ const HG38 = () => {
     const containerRef = useRef(null)
 
     const [definePosition, setDefinePosition] = useState()
+
 
     const shortenUrl = (url) => {
         try {
@@ -100,7 +101,7 @@ const HG38 = () => {
             })
         } else {
             if (activeVisualizationTracks.length == 0) {
-                toast.error("Please choose at least 1 Bigwig track", {duration: 1500})
+                toast.error("Please choose at least 1 Bigwig track", { duration: 1500 })
             } else {
                 const [chromosome, position] = row[1].split(":")
                 const [start, end] = position.split("-")
@@ -211,6 +212,7 @@ const HG38 = () => {
                 containerRef={containerRef}
                 changeMode={changeMode}
                 definePosition={definePosition}
+                exportState={true}
             />
         </div>
     );
